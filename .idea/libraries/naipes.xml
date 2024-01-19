@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="naipes">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/naipes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

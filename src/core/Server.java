@@ -1,44 +1,36 @@
 package core;
 
-import utils.MessageDigest;
-
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Server {
+
+    ExecutorService cachedPool = Executors.newCachedThreadPool();
 
     public Server(int port) {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("Server started on <host>:<port> " + serverSocket.getInetAddress() + ":" + serverSocket.getLocalPort());
-            new Thread(() -> {
-                try {
-                    listen(serverSocket);
-                } catch (IOException e) {
-                    System.out.println("IOException");
-                    e.printStackTrace();
-                }
-            }).start();
+            listen(serverSocket);
         } catch (IOException e) {
-            System.out.println("Failed to initialize Server");
+            System.out.println("Error initializing the server");
         }
     }
 
-    private void listen(ServerSocket serverSocket) throws IOException {
+    @SuppressWarnings("all")
+    private void listen(ServerSocket serverSocket) {
         while (true) {
-            Socket client = serverSocket.accept();
-            client.setSoTimeout(3000);
-
-            try (DataInputStream dis = new DataInputStream(client.getInputStream()); DataOutputStream dos = new DataOutputStream(client.getOutputStream())) {
-                String request = MessageDigest.decryptMessage(dis.readUTF());
-                System.out.printf("(%s): %s%n", client.getInetAddress(), request);
-                dos.writeUTF(MessageDigest.encryptMessage(request));
-                dos.flush();
+            try (Socket clientSocket = serverSocket.accept()) {
+                clientSocket.setSoTimeout(3000);
+                cachedPool.submit(new GamePlayer(clientSocket));
+                System.out.printf("(%s): Game started%n", clientSocket.getInetAddress());
             } catch (SocketTimeoutException e) {
-                System.out.printf("(%s): Timeout%n", client.getInetAddress());
+                System.out.println("Timeout" + e.getMessage());
+            } catch (IOException e) {
+                System.out.println("Error while waiting for clients: " + e.getMessage());
             }
         }
     }
