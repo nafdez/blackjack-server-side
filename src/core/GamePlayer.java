@@ -4,10 +4,12 @@ import org.fp.dam.naipes.blackjack.Blackjack;
 import org.fp.dam.naipes.blackjack.BlackjackPedirException;
 import org.fp.dam.naipes.blackjack.BlackjackPlantarseException;
 import org.fp.dam.naipes.blackjack.BlackjackRepartirException;
+import utils.GameManager;
 import utils.MessageProcessor;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
 
@@ -34,6 +36,7 @@ public class GamePlayer implements Runnable {
                         case "N": // New game
                             BLACKJACK.repartir();
                             dos.writeUTF(MessageProcessor.encodeMessage(BLACKJACK.toString()));
+                            dos.flush();
                             break;
                         case "H": // Hit
                             BLACKJACK.pedir();
@@ -54,6 +57,7 @@ public class GamePlayer implements Runnable {
             } catch (BlackjackRepartirException | BlackjackPedirException | BlackjackPlantarseException e) {
                 dos.writeUTF(MessageProcessor.encodeMessage(e.getMessage()));
             }
+        } catch (EOFException ignored) {
         } catch (IOException e) {
             e.printStackTrace();
         }
