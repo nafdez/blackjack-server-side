@@ -3,9 +3,7 @@ package core;
 import org.fp.dam.naipes.blackjack.Blackjack;
 
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketTimeoutException;
+import java.net.*;
 import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -16,7 +14,7 @@ public class Server {
 
     public Server(int port) {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            System.out.println("Server started on <host>:<port> " + serverSocket.getInetAddress() + ":" + serverSocket.getLocalPort());
+            System.out.println("Server started on <host>:<port> " + serverSocket.getInetAddress().getHostAddress() + ":" + serverSocket.getLocalPort());
             listen(serverSocket);
         } catch (IOException e) {
             System.out.println("Error initializing the server");
@@ -28,14 +26,15 @@ public class Server {
         try {
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                clientSocket.setSoTimeout(3000);
                 cachedPool.submit(new GamePlayer(clientSocket));
                 System.out.printf("(%s): Game started%n", clientSocket.getInetAddress());
             }
-        } catch (SocketTimeoutException e) {
-            System.out.println("Timeout" + e.getMessage());
         } catch (IOException e) {
             System.out.println("Error while waiting for clients: " + e.getMessage());
         }
+    }
+
+    public static void main(String[] args) {
+        new Server(9999);
     }
 }
